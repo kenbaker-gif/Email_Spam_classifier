@@ -9,7 +9,7 @@ load_dotenv()
 app = FastAPI()
 
 HF_TOKEN = os.getenv("HF_TOKEN")
-API_URL = "https://router.huggingface.co/hf-inference/models/kenbaker-gif/African_SMS_Spam_Classifier/pipeline/text-classification"
+API_URL = "https://router.huggingface.co/hf-inference/models/kenbaker-gif/African_SMS_Spam_Classifier"
 
 class Message(BaseModel):
     text: str
@@ -22,20 +22,27 @@ def classify(msg: Message):
     try:
         response = requests.post(
             API_URL,
-            headers={"Authorization": f"Bearer {HF_TOKEN}"},
+            headers={
+                "Authorization": f"Bearer {HF_TOKEN}",
+                "Content-Type": "application/json",
+                "x-use-cache": "0"
+            },
             json={"inputs": msg.text}
         )
+
         print(f"HF Status: {response.status_code}")
         print(f"HF Response: {response.text}")
 
         if response.status_code != 200:
             raise HTTPException(status_code=502, detail=f"HF error {response.status_code}: {response.text}")
 
-        result = response.json()[0][0]
+        data = response.json()
+        # Response is [[{label, score}, {label, score}]]
+        top = max(data[0], key=lambda x: x["score"])
         return {
-            "label": result["label"],
-            "confidence": round(result["score"], 4),
-            "is_spam": result["label"] == "SPAM"
+            "label": top["label"],
+            "confidence": round(top["score"], 4),
+            "is_spam": top["label"] == "SPAM"
         }
     except Exception as e:
         print(f"ERROR: {str(e)}")
