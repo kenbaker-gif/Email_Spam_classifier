@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-import requests
+from transformers import pipeline
 import os
 from dotenv import load_dotenv
 
@@ -8,41 +8,25 @@ load_dotenv()
 
 app = FastAPI()
 
-HF_TOKEN = os.getenv("HF_TOKEN")
-API_URL = "https://router.huggingface.co/hf-inference/models/kenbaker-gif/African_SMS_Spam_Classifier"
+# Load model once at startup directly from HF Hub
+print("Loading model...")
+classifier = pipeline(
+    "text-classification",
+    model="kenbaker-gif/African_SMS_Spam_Classifier"
+)
+print("Model loaded!")
 
 class Message(BaseModel):
     text: str
 
 @app.post("/classify")
 def classify(msg: Message):
-    if not HF_TOKEN:
-        raise HTTPException(status_code=500, detail="HF_TOKEN not configured")
-    
     try:
-        response = requests.post(
-            API_URL,
-            headers={
-                "Authorization": f"Bearer {HF_TOKEN}",
-                "Content-Type": "application/json",
-                "x-use-cache": "0"
-            },
-            json={"inputs": msg.text}
-        )
-
-        print(f"HF Status: {response.status_code}")
-        print(f"HF Response: {response.text}")
-
-        if response.status_code != 200:
-            raise HTTPException(status_code=502, detail=f"HF error {response.status_code}: {response.text}")
-
-        data = response.json()
-        # Response is [[{label, score}, {label, score}]]
-        top = max(data[0], key=lambda x: x["score"])
+        result = classifier(msg.text)[0]
         return {
-            "label": top["label"],
-            "confidence": round(top["score"], 4),
-            "is_spam": top["label"] == "SPAM"
+            "label": result["label"],
+            "confidence": round(result["score"], 4),
+            "is_spam": result["label"] == "SPAM"
         }
     except Exception as e:
         print(f"ERROR: {str(e)}")

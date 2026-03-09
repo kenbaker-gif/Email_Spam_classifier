@@ -1,4 +1,3 @@
-# --- STAGE 1: BUILDER ---
 FROM python:3.11-slim AS builder
 WORKDIR /app
 
@@ -9,7 +8,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# --- STAGE 2: FINAL RUNTIME ---
 FROM python:3.11-slim
 WORKDIR /app
 
@@ -23,5 +21,4 @@ COPY . .
 
 EXPOSE 8000
 
-# Shell form so $PORT expands correctly — same fix as your FaceAttend Dockerfile
 CMD uvicorn app.main:app --host 0.0.0.0 --port $PORT
