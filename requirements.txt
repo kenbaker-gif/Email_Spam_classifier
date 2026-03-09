@@ -1,6 +1,7 @@
 fastapi
 uvicorn
-huggingface-hub
+transformers
+torch
 python-dotenv
 pydantic
-requests
+huggingface-hub
