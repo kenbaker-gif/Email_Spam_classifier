@@ -9,7 +9,7 @@ load_dotenv()
 app = FastAPI()
 
 HF_TOKEN = os.getenv("HF_TOKEN")
-API_URL = "https://api-inference.huggingface.co/models/kenbaker-gif/African_SMS_Spam_Classifier"
+API_URL = "https://router.huggingface.co/models/kenbaker-gif/African_SMS_Spam_Classifier"
 
 class Message(BaseModel):
     text: str
