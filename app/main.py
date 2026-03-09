@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import requests
 import os
@@ -9,12 +9,11 @@ load_dotenv()
 app = FastAPI()
 
 HF_TOKEN = os.getenv("HF_TOKEN")
-API_URL = "https://router.huggingface.co/models/kenbaker-gif/African_SMS_Spam_Classifier"
+API_URL = "https://router.huggingface.co/hf-inference/models/kenbaker-gif/African_SMS_Spam_Classifier"
 
 class Message(BaseModel):
     text: str
 
-@app.post("/classify")
 @app.post("/classify")
 def classify(msg: Message):
     if not HF_TOKEN:
@@ -26,7 +25,6 @@ def classify(msg: Message):
         json={"inputs": msg.text}
     )
 
-    # Print raw response to Railway logs
     print(f"HF Status: {response.status_code}")
     print(f"HF Response: {response.text}")
 
