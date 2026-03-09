@@ -1,17 +1,34 @@
-# main.py
-from fastapi import FastAPI
+from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel
-from transformers import pipeline
+import requests
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI()
-classifier = pipeline("text-classification", model="kenbaker-gif/African_SMS_Spam_Classifier")
+
+HF_TOKEN = os.getenv("HF_TOKEN")
+API_URL = "https://api-inference.huggingface.co/models/kenbaker-gif/African_SMS_Spam_Classifier"
 
 class Message(BaseModel):
     text: str
 
 @app.post("/classify")
 def classify(msg: Message):
-    result = classifier(msg.text)[0]
+    if not HF_TOKEN:
+        raise HTTPException(status_code=500, detail="HF_TOKEN not configured")
+    
+    response = requests.post(
+        API_URL,
+        headers={"Authorization": f"Bearer {HF_TOKEN}"},
+        json={"inputs": msg.text}
+    )
+    
+    if response.status_code != 200:
+        raise HTTPException(status_code=502, detail="Model inference failed")
+    
+    result = response.json()[0][0]
     return {
         "label": result["label"],
         "confidence": round(result["score"], 4),
