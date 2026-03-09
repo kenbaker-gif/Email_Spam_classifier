@@ -34,12 +34,3 @@ def classify(msg: Message):
 @app.get("/health")
 def health():
     return {"status": "ok"}
-```
-
-And update `requirements.txt`:
-```
-fastapi
-uvicorn
-huggingface-hub
-python-dotenv
-pydantic
