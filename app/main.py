@@ -103,3 +103,16 @@ def test():
         "ham_detected": ham_count,
         "results": results
     }
+
+@app.post("/classify/batch")
+def classify_batch(messages: list[Message]):
+    results = []
+    for msg in messages:
+        result = classifier(msg.text)[0]
+        results.append({
+            "text": msg.text[:70],
+            "label": result["label"],
+            "confidence": round(result["score"], 4),
+            "is_spam": result["label"] == "SPAM"
+        })
+    return {"total": len(results), "results": results}
