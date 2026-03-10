@@ -19,6 +19,19 @@ print("Model loaded!")
 class Message(BaseModel):
     text: str
 
+@app.get("/")
+def root():
+    return {
+        "name": "African SMS Spam Classifier",
+        "version": "1.0.0",
+        "author": "Ainebyona Abubaker",
+        "endpoints": {
+            "classify": "POST /classify",
+            "health": "GET /health",
+            "docs": "GET /docs"
+        }
+    }
+
 @app.post("/classify")
 def classify(msg: Message):
     try:
